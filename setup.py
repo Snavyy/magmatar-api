@@ -2,7 +2,6 @@ import os, sys
 
 import setuptools
 
-# Require pytest-runner only when running tests
 pytest_runner = (['pytest-runner>=2.0,<3dev']
                  if any(arg in sys.argv for arg in ('pytest', 'test'))
                  else [])
@@ -10,8 +9,8 @@ pytest_runner = (['pytest-runner>=2.0,<3dev']
 setup_requires = pytest_runner
 
 setuptools.setup(
-    name="magmatar-api", # Replace with your own username
-    version="1.0-rc2",
+    name="magmatar-api",
+    version="1.0rc5",
     author="Snavy",
     author_email="1337Snavy@gmail.com",
     description="Public Magmatar.com API Wrapper",

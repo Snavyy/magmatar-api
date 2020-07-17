@@ -1,35 +1,81 @@
-import os, sys, re, io
-import requests, json
-import datetime, time
+import io
+import asyncio, aiohttp, requests
 
-def fetchSkinFile(uuid):
-    magmatarBaseUrl = 'https://api.magmatar.com/'
-    skinUrl = magmatarBaseUrl + 'f' + '/' + 'skin' + '/' + uuid
-    skinReq = requests.get(skinUrl)
-    skinBytes = skinReq.content
-    skinObj = io.BytesIO(skinBytes)
-    return skinObj
+MagmatarBaseURL = 'https://api.magmatar.com/'
 
-def fetchSkinUrl(uuid, extension=None):
-    magmatarBaseUrl = 'https://api.magmatar.com/'
-    skinUrl = magmatarBaseUrl + 'f' + '/' + 'skin' + '/' + uuid
-    if extension == True:
-        skinUrl = skinUrl + '.' + 'png'
-    return skinUrl
+def fetchSkinUrl(playerQuery):
+    global MagmatarBaseURL
+    return MagmatarBaseURL + 'f/skin/' + playerQuery
 
-def fetchHeadFile(uuid, overlay=False, size=32):
-    magmatarBaseUrl = 'https://api.magmatar.com/'
-    headUrl = magmatarBaseUrl + 'f' + '/' + 'head' + '/' + uuid + '?' + 'overlay' + '=' + str(overlay) + '&' + 'size' + '=' + str(size)
-    headReq = requests.get(headUrl)
-    headBytes = headReq.content
-    headObj = io.BytesIO(headBytes)
-    return headObj
+def fetchHeadUrl(playerQuery, playerHeadSize, playerHeadOverlay):
+    global MagmatarBaseURL
+    return MagmatarBaseURL + 'f/head/' + playerQuery + '?size=' + str(playerHeadSize) + ['', '&overlay=True'][playerHeadOverlay]
 
-def fetchHeadUrl(uuid, overlay=False, size=32, extension=None):
-    magmatarBaseUrl = 'https://api.magmatar.com/'
-    if extension == True:
-        png = '.png'
+def fetchSkinIo(playerQuery):
+    skinIo = io.BytesIO(requests.get(fetchSkinUrl(playerQuery)).content)
+    return skinIo
+
+def fetchSkinBytes(playerQuery):
+    skinIo = io.BytesIO(requests.get(fetchSkinUrl(playerQuery)).content)
+    skinBytes = skinIo.getvalue()
+    skinIo.close()
+    return skinBytes
+
+def fetchHeadIo(playerQuery, playerHeadSize=32, playerHeadOverlay=False):
+    headIo = io.BytesIO(requests.get(fetchHeadUrl(playerQuery, playerHeadSize, playerHeadOverlay)).content)
+    return headIo
+
+def fetchHeadBytes(playerQuery, playerHeadSize=32, playerHeadOverlay=False):
+    headIo = io.BytesIO(requests.get(fetchHeadUrl(playerQuery, playerHeadSize, playerHeadOverlay)).content)
+    headBytes = headIo.getvalue()
+    headIo.close()
+    return headBytes
+
+async def fetchBytes(session, url):
+    async with session.get(url) as resp:
+        respBytes = await resp.read()
+    return respBytes
+
+async def fetchSkinIoAsync(playerQuery, sessionX=None):
+    if sessionX == None:
+        sessionY = aiohttp.ClientSession()
     else:
-        png = ''
-    headUrl = magmatarBaseUrl + 'f' + '/' + 'head' + '/' + uuid + png + '?' + 'overlay' + '=' + str(overlay) + '&' + 'size' + '=' + str(size)
-    return headUrl
+        sessionY = sessionX
+    skinIo = io.BytesIO(await fetchBytes(sessionY, fetchSkinUrl(playerQuery)))
+    if sessionX == None:
+        await sessionY.close()
+    return skinIo
+
+async def fetchSkinBytesAsync(playerQuery, sessionX=None):
+    if sessionX == None:
+        sessionY = aiohttp.ClientSession()
+    else:
+        sessionY = sessionX
+    skinIo = io.BytesIO(await fetchBytes(sessionY, fetchSkinUrl(playerQuery)))
+    if sessionX == None:
+        await sessionY.close()
+    skinBytes = skinIo.getvalue()
+    skinIo.close()
+    return skinBytes
+
+async def fetchHeadIoAsync(playerQuery, playerHeadSize=32, playerHeadOverlay=False, sessionX=None):
+    if sessionX == None:
+        sessionY = aiohttp.ClientSession()
+    else:
+        sessionY = sessionX
+    skinIo = io.BytesIO(await fetchBytes(sessionY, fetchHeadUrl(playerQuery, playerHeadSize, playerHeadOverlay)))
+    if sessionX == None:
+        await sessionY.close()
+    return skinIo
+
+async def fetchHeadBytesAsync(playerQuery, playerHeadSize=32, playerHeadOverlay=False, sessionX=None):
+    if sessionX == None:
+        sessionY = aiohttp.ClientSession()
+    else:
+        sessionY = sessionX
+    skinIo = io.BytesIO(await fetchBytes(sessionY, fetchHeadUrl(playerQuery, playerHeadSize, playerHeadOverlay)))
+    if sessionX == None:
+        await sessionY.close()
+    skinBytes = skinIo.getvalue()
+    skinIo.close()
+    return skinBytes
